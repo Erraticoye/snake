@@ -21,6 +21,7 @@ int tail_length = 0;
 int length_counter = 0;
 int check_cords[2];
 int tail_cords[CANVAS_HEIGHT * CANVAS_WIDTH - 1][2] = {};
+unsigned int tail_length_increment_flag = 0;
 
 void change_food_cords(int* cords);
 void setCursorPosition(int x, int y);
@@ -43,6 +44,10 @@ int main() {
 			setCursorPosition(0, 0);
 			now = clock();
 			if (now - old_time >= 700) {
+				if (tail_length_increment_flag == 1) {
+					tail_length++;
+					tail_length_increment_flag = 0;
+				}
 				old_time = now;
 				old_snake_cords[0] = snake_cords[0];
 				old_snake_cords[1] = snake_cords[1];
@@ -89,18 +94,29 @@ int main() {
 				printf("\n%d %d\n", snake_cords[0], snake_cords[1]);
 				//check if the char is food
 				if (canvas[snake_cords[0]][snake_cords[1]] == '#') {
-					++tail_length;
+					tail_length_increment_flag = 1;
 					change_food_cords(food_cords);
+					while (canvas[food_cords[0]][food_cords[1]] == '@' || canvas[food_cords[0]][food_cords[1]] == 'o') {
+						change_food_cords(food_cords);
+					}
 					canvas[food_cords[0]][food_cords[1]] = '#';
 				}
 
-				for (size_t i = 0; i < tail_length; i++) {
-					canvas[tail_cords[i][0]][tail_cords[i][1]] = 'o';
-				}
+                for (size_t i = 0; i < tail_length; i++) {
+                    if (tail_cords[i][0] >= 0 && tail_cords[i][0] < CANVAS_WIDTH && tail_cords[i][1] >= 0 && tail_cords[i][1] < CANVAS_HEIGHT) {
+                        canvas[tail_cords[i][0]][tail_cords[i][1]] = 'o';
+                    }
+                }
+
 				if (canvas[snake_cords[0]][snake_cords[1]] == 'o') 
 					game_over("Stepped on tail.");
 
-				canvas[snake_cords[0]][snake_cords[1]] = '@';
+				if (snake_cords[0] >= 0 && snake_cords[0] < CANVAS_WIDTH && snake_cords[1] >= 0 && snake_cords[1] < CANVAS_HEIGHT) {
+					canvas[snake_cords[0]][snake_cords[1]] = '@';
+				}
+				else {
+					game_over("Snake out of bounds.");
+				}
 
 				for (size_t i = 0; i < CANVAS_WIDTH; i++) {
 					printf("\n");
